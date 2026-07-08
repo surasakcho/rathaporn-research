@@ -2,6 +2,8 @@
 
 # Raw data (large downloads — not for version control)
 **/data/raw/
+!**/data/raw/elevation-slope/Thailand-DEM.tif
+!**/data/raw/elevation-slope/Thailand-slope.tif
 
 # Intermediate rasters — reproducible by re-running terrain_vars.py
 **/data/processed/_terrain_intermediate/

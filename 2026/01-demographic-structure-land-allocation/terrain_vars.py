@@ -68,7 +68,8 @@ def compute_slope_windowed(src_path: Path, dst_path: Path, block_size: int = 102
         dem_nodata = src.nodata if src.nodata is not None else -9999.0
         height, width = src.height, src.width
         meta = src.meta.copy()
-        meta.update({"dtype": "float32", "nodata": SLOPE_NODATA, "count": 1})
+        meta.update({"dtype": "float32", "nodata": SLOPE_NODATA, "count": 1,
+                     "compress": "deflate", "predictor": 2, "zlevel": 6})
 
         with rasterio.open(dst_path, "w", **meta) as dst:
             total_blocks = ((height + block_size - 1) // block_size) * ((width + block_size - 1) // block_size)
@@ -140,7 +141,8 @@ def process_zone(tambons: gpd.GeoDataFrame, epsg: int, mosaic_path: Path) -> pd.
                 src.crs, target_crs, src.width, src.height, *src.bounds
             )
             meta = src.meta.copy()
-            meta.update({"crs": target_crs, "transform": transform, "width": width, "height": height})
+            meta.update({"crs": target_crs, "transform": transform, "width": width, "height": height,
+                         "compress": "deflate", "predictor": 2, "zlevel": 6})
             with rasterio.open(proj_dem_path, "w", **meta) as dst:
                 reproject(
                     source=rasterio.band(src, 1),
@@ -268,7 +270,8 @@ def main():
         srcs = [rasterio.open(t) for t in dem_tiles]
         mosaic, mosaic_transform = rio_merge(srcs)
         meta = srcs[0].meta.copy()
-        meta.update({"height": mosaic.shape[1], "width": mosaic.shape[2], "transform": mosaic_transform})
+        meta.update({"height": mosaic.shape[1], "width": mosaic.shape[2], "transform": mosaic_transform,
+                     "compress": "deflate", "predictor": 2, "zlevel": 6})
         for s in srcs:
             s.close()
         with rasterio.open(mosaic_path, "w", **meta) as dst:

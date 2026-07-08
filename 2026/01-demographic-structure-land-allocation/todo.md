@@ -10,7 +10,7 @@ Output: one row per tambon with columns:
 - Slope classes: flat < 3°, gentle 3–8°, moderate 8–15°, steep > 15°
 - These serve as geographic control variables (Z_i) in the SDM to isolate demographic effects from physical land constraints
 
-- [ ] Calculate terrain variables per tambon (merge 4 DEM tiles → derive slope raster → zonal stats against LDD tambon polygons)
+- [x] Calculate terrain variables per tambon (merge 4 DEM tiles → derive slope raster → zonal stats against LDD tambon polygons) — **done** (`terrain_vars.csv` + `terrain_vars.gpkg`, 7317 tambons). Slope: central difference on UTM-reprojected DEM. JAXA uses Horn (1981) kernel in WGS84 — RMSE diff 0.04°, negligible; **method decision pending**.
 - [ ] Calculate flood risk proxy per tambon — definition TBD (candidate: flow accumulation from DEM + low-elevation threshold; or use existing flood hazard shapefile from DDPMor GISTDA)
 
 ### Accessibility variables

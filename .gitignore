@@ -1,0 +1,5 @@
+.venv/
+
+# Raw and processed data (large files / not for version control)
+**/data/raw/
+**/data/processed/

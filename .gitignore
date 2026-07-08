@@ -1,5 +1,7 @@
 .venv/
 
-# Raw and processed data (large files / not for version control)
+# Raw data (large downloads — not for version control)
 **/data/raw/
-**/data/processed/
+
+# Intermediate rasters — reproducible by re-running terrain_vars.py
+**/data/processed/_terrain_intermediate/

@@ -11,6 +11,7 @@ Output: one row per tambon with columns:
 - These serve as geographic control variables (Z_i) in the SDM to isolate demographic effects from physical land constraints
 
 - [x] Calculate terrain variables per tambon (merge 4 DEM tiles → derive slope raster → zonal stats against LDD tambon polygons) — **done** (`terrain_vars.csv` + `terrain_vars.gpkg`, 7317 tambons). Slope: central difference on UTM-reprojected DEM. JAXA uses Horn (1981) kernel in WGS84 — RMSE diff 0.04°, negligible; **method decision pending**.
+- [ ] **Gap: Province 34 (Ubon Ratchathani) is entirely missing from `terrain_vars.csv`** — 0 tambons out of ~198 expected. Likely cause: LDD boundary folder for province 34 absent or shapefile doesn't match `*[Tt]am*.shp` glob in `terrain_vars.py`. Check `data/raw/ldd-data/admin-boundary/` for the province-34 folder and re-run if missing. Identified by `validate_terrain.py`.
 - [ ] Calculate flood risk proxy per tambon — definition TBD (candidate: flow accumulation from DEM + low-elevation threshold; or use existing flood hazard shapefile from DDPMor GISTDA)
 
 ### Accessibility variables

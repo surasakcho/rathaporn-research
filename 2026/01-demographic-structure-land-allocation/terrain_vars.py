@@ -8,15 +8,19 @@ Steps:
        - Reproject mosaic to that zone (meters → accurate slope).
        - Compute slope raster (degrees).
        - Run zonal stats for elevation and slope per tambon polygon.
-  4. Write output/terrain_vars.csv + output/terrain_vars.gpkg.
+  4. Write data/processed/terrain/terrain_vars.csv + terrain_vars.gpkg.
 
 Output columns:
-  tambon_code, avg_slope, median_slope, sd_slope,
+  tambon_code, prov_code, amp_code,
+  PROV_NAM_T, PROV_NAM_E, AMPHOE_T, AMPHOE_E, TAM_NAM_T,
+  avg_slope, median_slope, sd_slope,
   avg_elev, median_elev, sd_elev, elev_range,
   pct_flat, pct_gentle, pct_moderate, pct_steep
 
 Slope classes: flat < 3°, gentle 3–8°, moderate 8–15°, steep ≥ 15°
 Tambon code: 6-digit string = PROV_CODE(2) + AMP_CODE(2) + TAM_CODE(2)
+Name sources: LDD shapefiles supply PROV_NAM_T/E, AMPHOE_T/E, TAM_NAM_T.
+  No English tambon name is available in the source data.
 """
 
 import sys, io
@@ -37,18 +41,28 @@ from rasterstats import zonal_stats
 BASE = Path(__file__).parent
 DEM_DIR = BASE / "data" / "raw" / "elevation-slope"
 BOUNDARY_DIR = BASE / "data" / "raw" / "ldd-data" / "admin-boundary"
-OUT_DIR = BASE / "data" / "processed"
-INTERMEDIATE_DIR = OUT_DIR / "_terrain_intermediate"
+OUT_DIR = BASE / "data" / "processed" / "terrain"
+INTERMEDIATE_DIR = BASE / "data" / "processed" / "_terrain_intermediate"
 
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 INTERMEDIATE_DIR.mkdir(parents=True, exist_ok=True)
 
 SLOPE_CLASSES = [("flat", 0, 3), ("gentle", 3, 8), ("moderate", 8, 15), ("steep", 15, 9999)]
+NAME_COLS = ["PROV_NAM_T", "PROV_NAM_E", "AMPHOE_T", "AMPHOE_E", "TAM_NAM_T"]
 
 
 def find_tambon_shp(province_dir: Path) -> Path | None:
     candidates = list(province_dir.glob("*[Tt]am*.shp"))
     return candidates[0] if candidates else None
+
+
+def extract_names(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    """Return a copy of gdf with NAME_COLS present (None if missing in source)."""
+    for col in NAME_COLS:
+        if col not in gdf.columns:
+            gdf = gdf.copy()
+            gdf[col] = None
+    return gdf
 
 
 def build_tambon_code(gdf: gpd.GeoDataFrame) -> pd.Series:
@@ -210,7 +224,7 @@ def process_zone(tambons: gpd.GeoDataFrame, epsg: int, mosaic_path: Path) -> pd.
         s = slope_stats[i]
         emin = e.get("min") or 0
         emax = e.get("max") or 0
-        rows.append({
+        row = {
             "tambon_code": row_gdf.tambon_code,
             "avg_elev":     e.get("mean"),
             "median_elev":  e.get("median"),
@@ -223,7 +237,10 @@ def process_zone(tambons: gpd.GeoDataFrame, epsg: int, mosaic_path: Path) -> pd.
             "pct_gentle":   s.get("pct_gentle"),
             "pct_moderate": s.get("pct_moderate"),
             "pct_steep":    s.get("pct_steep"),
-        })
+        }
+        for col in NAME_COLS:
+            row[col] = getattr(row_gdf, col, None)
+        rows.append(row)
 
     stats_df = pd.DataFrame(rows)
     tambons_with_stats = tambons.copy().reset_index(drop=True)
@@ -248,6 +265,7 @@ def main():
             continue
         gdf = gpd.read_file(shp)
         gdf["tambon_code"] = build_tambon_code(gdf)
+        gdf = extract_names(gdf)
         epsg = gdf.crs.to_epsg()
         if epsg in zone_gdfs:
             zone_gdfs[epsg].append(gdf)
@@ -261,10 +279,11 @@ def main():
 
     raw_47 = gpd.GeoDataFrame(pd.concat(zone_gdfs[32647], ignore_index=True), crs="EPSG:32647")
     raw_48 = gpd.GeoDataFrame(pd.concat(zone_gdfs[32648], ignore_index=True), crs="EPSG:32648")
-    # Dissolve multi-part polygons (islands etc.) stored as separate rows into single MultiPolygon per tambon
-    tambons_47 = raw_47.dissolve(by="tambon_code").reset_index()[["tambon_code", "geometry"]]
+    # Dissolve multi-part polygons; keep first name values per tambon (same across rows)
+    keep_cols = ["tambon_code"] + NAME_COLS + ["geometry"]
+    tambons_47 = raw_47.dissolve(by="tambon_code", aggfunc="first").reset_index()[keep_cols]
     tambons_47 = gpd.GeoDataFrame(tambons_47, crs="EPSG:32647")
-    tambons_48 = raw_48.dissolve(by="tambon_code").reset_index()[["tambon_code", "geometry"]]
+    tambons_48 = raw_48.dissolve(by="tambon_code", aggfunc="first").reset_index()[keep_cols]
     tambons_48 = gpd.GeoDataFrame(tambons_48, crs="EPSG:32648")
     print(f"Zone 47: {len(tambons_47)} tambons | Zone 48: {len(tambons_48)} tambons")
 
@@ -303,8 +322,13 @@ def main():
         crs="EPSG:4326",
     )
 
+    combined_geo["prov_code"] = combined_geo["tambon_code"].str[:2]
+    combined_geo["amp_code"]  = combined_geo["tambon_code"].str[2:4]
+
     output_cols = [
-        "tambon_code", "avg_slope", "median_slope", "sd_slope",
+        "tambon_code", "prov_code", "amp_code",
+        "PROV_NAM_T", "PROV_NAM_E", "AMPHOE_T", "AMPHOE_E", "TAM_NAM_T",
+        "avg_slope", "median_slope", "sd_slope",
         "avg_elev", "median_elev", "sd_elev", "elev_range",
         "pct_flat", "pct_gentle", "pct_moderate", "pct_steep",
     ]

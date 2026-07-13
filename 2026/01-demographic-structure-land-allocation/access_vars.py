@@ -21,9 +21,10 @@ from scipy.spatial import cKDTree
 BASE   = Path(__file__).parent
 DLA    = BASE / "data/raw/DLA/re01_9112566tambon.csv"
 GPKG   = BASE / "data/processed/terrain/terrain_vars.gpkg"
-OUT_DIR = BASE / "data/processed/access"
-OUT_CSV  = OUT_DIR / "access_vars.csv"
-OUT_GPKG = OUT_DIR / "access_vars.gpkg"
+OUT_DIR       = BASE / "data/processed/access"
+OUT_CSV       = OUT_DIR / "access_vars.csv"
+OUT_GPKG      = OUT_DIR / "access_vars.gpkg"
+OUT_CITIES_GPKG = OUT_DIR / "cities.gpkg"
 
 CITY_TYPES = {"เทศบาลเมือง", "เทศบาลนคร"}
 
@@ -102,6 +103,20 @@ def main():
     out_geo = gpd.GeoDataFrame(out_geo, crs=tambons.crs)
     out_geo.to_file(OUT_GPKG, driver="GPKG", layer="access_vars")
     print(f"  Wrote {OUT_GPKG}")
+
+    # Cities point layer
+    from shapely.geometry import Point
+    cities_geo = gpd.GeoDataFrame(
+        cities.rename(columns={
+            "ประเภท อปท.": "lao_type",
+            "อปท.":        "city_name",
+            "จังหวัด":     "province",
+        }),
+        geometry=[Point(lon, lat) for lat, lon in zip(cities["LAT"], cities["LONG"])],
+        crs="EPSG:4326",
+    )
+    cities_geo.to_file(OUT_CITIES_GPKG, driver="GPKG", layer="cities")
+    print(f"  Wrote {OUT_CITIES_GPKG}")
 
     # ── 6. Quick summary ─────────────────────────────────────────────────────
     print()

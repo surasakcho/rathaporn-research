@@ -1,9 +1,10 @@
 .venv/
 
-# Raw data (large downloads — not for version control)
-# **/data/raw/
-# !**/data/raw/elevation-slope/Thailand-DEM.tif
-# !**/data/raw/elevation-slope/Thailand-slope.tif
+# Raw raster tiles — large source downloads, not for version control
+# Only the mosaics (Thailand-DEM.tif, Thailand-slope.tif) are kept in LFS
+**/data/raw/elevation-slope/AW3D30-*.tif
+**/data/raw/elevation-slope/redownload/
+**/data/raw/งาน RA ครั้งที่ 2/
 
 # Intermediate rasters — reproducible by re-running terrain_vars.py
 **/data/processed/_terrain_intermediate/

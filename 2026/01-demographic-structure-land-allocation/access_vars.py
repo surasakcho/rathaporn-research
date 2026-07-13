@@ -21,7 +21,7 @@ from scipy.spatial import cKDTree
 BASE   = Path(__file__).parent
 DLA    = BASE / "data/raw/DLA/re01_9112566tambon.csv"
 GPKG   = BASE / "data/processed/terrain/terrain_vars.gpkg"
-OUT_DIR       = BASE / "data/processed/access"
+OUT_DIR       = BASE / "data/processed/distance-to-city"
 OUT_CSV       = OUT_DIR / "access_vars.csv"
 OUT_GPKG      = OUT_DIR / "access_vars.gpkg"
 OUT_CITIES_GPKG = OUT_DIR / "cities.gpkg"

@@ -6,7 +6,7 @@ City locations come from the DLA LAO registry (re01_9112566tambon.csv).
 Each LAO has one GPS office location; rows with the same LAT/LONG are the
 same physical city — deduplicated before distance calculation.
 
-Tambon centroids are derived from terrain_vars.gpkg (which covers all 7589 tambons).
+Tambon centroids are derived from slope_vars.gpkg (which covers all 7589 tambons).
 """
 
 import sys, io
@@ -20,7 +20,7 @@ from scipy.spatial import cKDTree
 
 BASE   = Path(__file__).parent
 DLA    = BASE / "data/raw/DLA/re01_9112566tambon.csv"
-GPKG   = BASE / "data/processed/terrain/terrain_vars.gpkg"
+GPKG   = BASE / "data/processed/slope/slope_vars.gpkg"
 OUT_DIR       = BASE / "data/processed/distance-to-city"
 OUT_CSV       = OUT_DIR / "distance_to_city_vars.csv"
 OUT_GPKG      = OUT_DIR / "distance_to_city_vars.gpkg"
@@ -62,7 +62,7 @@ def main():
     tree = cKDTree(city_coords)
 
     # ── 2. Load tambon centroids ─────────────────────────────────────────────
-    print("Loading tambon geometries from terrain_vars.gpkg...")
+    print("Loading tambon geometries from slope_vars.gpkg...")
     tambons = gpd.read_file(GPKG)
     print(f"  {len(tambons)} tambons loaded")
 

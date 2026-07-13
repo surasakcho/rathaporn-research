@@ -8,7 +8,7 @@ Steps:
        - Reproject mosaic to that zone (meters → accurate slope).
        - Compute slope raster (degrees).
        - Run zonal stats for elevation and slope per tambon polygon.
-  4. Write data/processed/terrain/terrain_vars.csv + terrain_vars.gpkg.
+  4. Write data/processed/slope/slope_vars.csv + slope_vars.gpkg.
 
 Output columns:
   tambon_code, prov_code, amp_code,
@@ -41,7 +41,7 @@ from rasterstats import zonal_stats
 BASE = Path(__file__).parent
 DEM_DIR = BASE / "data" / "raw" / "elevation-slope"
 BOUNDARY_DIR = BASE / "data" / "raw" / "ldd-data" / "admin-boundary"
-OUT_DIR = BASE / "data" / "processed" / "terrain"
+OUT_DIR = BASE / "data" / "processed" / "slope"
 INTERMEDIATE_DIR = BASE / "data" / "processed" / "_terrain_intermediate"
 
 OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -333,12 +333,12 @@ def main():
         "pct_flat", "pct_gentle", "pct_moderate", "pct_steep",
     ]
 
-    csv_path = OUT_DIR / "terrain_vars.csv"
+    csv_path = OUT_DIR / "slope_vars.csv"
     combined_geo[output_cols].to_csv(csv_path, index=False)
     print(f"  CSV: {csv_path}")
 
-    gpkg_path = OUT_DIR / "terrain_vars.gpkg"
-    combined_geo[output_cols + ["geometry"]].to_file(gpkg_path, driver="GPKG", layer="terrain_vars")
+    gpkg_path = OUT_DIR / "slope_vars.gpkg"
+    combined_geo[output_cols + ["geometry"]].to_file(gpkg_path, driver="GPKG", layer="slope_vars")
     print(f"  GeoPackage: {gpkg_path}")
 
     print(f"\nDone. {len(combined_geo)} tambons written.")

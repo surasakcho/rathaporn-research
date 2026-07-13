@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-CSV = Path(__file__).parent / "data" / "processed" / "terrain" / "terrain_vars.csv"
+CSV = Path(__file__).parent / "data" / "processed" / "slope" / "slope_vars.csv"
 
 STAT_COLS = [
     "avg_slope", "median_slope", "sd_slope",

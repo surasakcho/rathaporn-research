@@ -140,11 +140,15 @@ if not bad_format.empty:
     print(f"    Examples: {bad_format.head(5).tolist()}")
     issues.append(f"{len(bad_format)} non-6-digit tambon codes")
 
-# Province codes 01–77 (Thailand has 77 provinces)
-prov = codes.str[:2].astype(int, errors="ignore")
-valid_prov = codes.str[:2].apply(lambda x: x.isdigit() and 1 <= int(x) <= 77)
+# Thai province codes are non-contiguous (10–27, 30–49, 50–58, 60–67, 70–77, 80–86, 90–96)
+VALID_PROV_CODES = (
+    set(range(10, 28)) | set(range(30, 50)) | set(range(50, 59)) |
+    set(range(60, 68)) | set(range(70, 78)) | set(range(80, 87)) |
+    set(range(90, 97))
+)
+valid_prov = codes.str[:2].apply(lambda x: x.isdigit() and int(x) in VALID_PROV_CODES)
 bad_prov = (~valid_prov).sum()
-print(f"  Province codes out of range 01–77: {bad_prov}")
+print(f"  Province codes not in valid Thai set: {bad_prov}")
 if bad_prov > 0:
     print(f"    Bad codes: {codes[~valid_prov].head(10).tolist()}")
     issues.append(f"{bad_prov} tambons with province code outside 01–77")
@@ -169,9 +173,9 @@ n_provs = codes.str[:2].nunique()
 print(f"  Provinces covered: {n_provs} / 77")
 if n_provs < 77:
     present = set(codes.str[:2].unique())
-    missing_provs = [f"{i:02d}" for i in range(1, 78) if f"{i:02d}" not in present]
+    missing_provs = [f"{p:02d}" for p in sorted(VALID_PROV_CODES) if f"{p:02d}" not in present]
     print(f"  Missing provinces: {missing_provs}")
-    issues.append(f"Missing {77 - n_provs} provinces: {missing_provs}")
+    issues.append(f"Missing {len(missing_provs)} provinces: {missing_provs}")
 
 # ── 5. Internal consistency ──────────────────────────────────────────────────
 print()

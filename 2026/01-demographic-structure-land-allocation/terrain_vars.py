@@ -52,11 +52,20 @@ def find_tambon_shp(province_dir: Path) -> Path | None:
 
 
 def build_tambon_code(gdf: gpd.GeoDataFrame) -> pd.Series:
-    return (
-        gdf["PROV_CODE"].astype(int).astype(str).str.zfill(2)
-        + gdf["AMP_CODE"].astype(int).astype(str).str.zfill(2)
-        + gdf["TAM_CODE"].astype(int).astype(str).str.zfill(2)
-    )
+    # TAMBON_IDN is 6 digits in most shapefiles and is authoritative (fixes PROV_CODE=36 bug
+    # in หนองบัวลำภู/Nong Bua Lam Phu, whose TAMBON_IDN correctly starts with 39).
+    # Exception: Krabi (province 81) has 39 island (เกาะ) tambons with 3-digit TAMBON_IDN
+    # (500–539). These use a special island-tambon numbering scheme; PROV_CODE=81 is correct
+    # for all of them, so the fallback to PROV_CODE+AMP_CODE+TAM_CODE is intentional.
+    # Only 2 of the 39 island names overlap with inland tambon names (เกาะยูง→810510,
+    # เกาะแดง→810802); the other 35 are unique island entities, kept as separate tambons.
+    idn_str = gdf["TAMBON_IDN"].astype(str)
+    use_idn = idn_str.str.len() == 6  # True when TAMBON_IDN already encodes full 6-digit code
+    idn = idn_str.str.zfill(6)
+    prov = idn.str[:2].where(use_idn, gdf["PROV_CODE"].astype(int).astype(str).str.zfill(2))
+    amp  = idn.str[2:4].where(use_idn, gdf["AMP_CODE"].astype(int).astype(str).str.zfill(2))
+    tam  = idn.str[4:6].where(use_idn, gdf["TAM_CODE"].astype(int).astype(str).str.zfill(2))
+    return prov + amp + tam
 
 
 def compute_slope_windowed(src_path: Path, dst_path: Path, block_size: int = 1024) -> None:

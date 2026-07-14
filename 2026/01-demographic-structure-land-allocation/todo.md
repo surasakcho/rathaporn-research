@@ -16,7 +16,7 @@ Output: one row per tambon with columns:
 
 ### Accessibility variables
 
-- [ ] Calculate distance from each tambon's centroid to the nearest municipal city (เทศบาลเมือง / เทศบาลนคร)
+- [x] Calculate distance from each tambon's centroid to the nearest municipal city (เทศบาลเมือง / เทศบาลนคร) — **done** (`distance_to_city_vars.csv` + `distance_to_city_vars.gpkg`, 7589 tambons, 170 distinct city GPS points from DLA LAO registry)
 - [ ] Calculate distance from each tambon's centroid to the nearest major road
 - [ ] Road density per tambon
 
